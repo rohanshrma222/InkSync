@@ -8,9 +8,18 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcryptjs": "^3.0.2",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/express": "^5.0.0",
-    "express": "^4.21.2"
+    "@repo/backend-common": "workspace:*",
+    "@repo/common":"workspace:*"
   },
   "keywords": [],
   "author": "",
