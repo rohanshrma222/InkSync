@@ -1,5 +1,5 @@
 {
-  "name": "PenChan",
+  "name": "penchan",
   "private": true,
   "scripts": {
     "build": "turbo run build",
