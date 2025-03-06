@@ -3,7 +3,7 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 
 interface DecodedToken {    //Added these to remove typescript error
-    userId: string; 
+    userId?: string; 
 }
 
 interface AuthenticatedRequest extends Request {  //Added these to remove typescript error
@@ -11,7 +11,12 @@ interface AuthenticatedRequest extends Request {  //Added these to remove typesc
 }
 
 export function middleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    const token = req.headers["authorization"] || "";
+    console.log("received the authenticationBody:", req.body);
+    const token = req.headers["authorization"] ?? "";  
+
+    if (!token) {
+         res.status(403).json({ message: "Unauthorized" });
+    }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
@@ -21,5 +26,6 @@ export function middleware(req: AuthenticatedRequest, res: Response, next: NextF
         res.status(403).json({
             message: "Unauthorized",
         });
+        return;
     }
 }
