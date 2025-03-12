@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 export function AuthPage({isSignin}: {
     isSignin: boolean
 }) {
-    return <div className="w-screen h-screen bg-gradient-to-r from-blue-500 to-fuchsia-600 flex justify-center items-center">
+    return <div className="w-screen h-screen bg-white flex justify-center items-center">
         <div className="px-9 py-20 bg-white shadow-xl rounded">
             <div className="">
                 Welcome Back!
