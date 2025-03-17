@@ -15,25 +15,55 @@ const users: User[] = [];
 
 function checkUser(token: string): string | null {
     try {
+        console.log("Received token:", token);
+
+        // Decode the token
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-        if (!decoded || !decoded.userId) {
+        console.log("Decoded token:", decoded);
+
+        // Ensure decoded payload contains userId
+        if (!decoded || typeof decoded !== "object") {
+            console.error("Decoded token is invalid:", decoded);
             return null;
         }
+
+        if (!decoded.userId) {
+            console.error("User ID is missing in decoded token.");
+            return null;
+        }
+
+        console.log("Extracted User ID:", decoded.userId);
         return decoded.userId;
-    } catch (e) {
+    } catch (error) {
+        console.error("JWT verification error:", error);
         return null;
     }
 }
 
 wss.on('connection', (ws: WebSocket, request) => {
+    console.log("New WebSocket connection established.");
+    console.log("Request URL:", request.url);
     const url = request.url;
-    if (!url) return;
+    if (!url){
+        console.error("Request URL is missing.");
+        ws.close();
+        return;
+    }
 
     const queryParams = new URLSearchParams(url.split('?')[1]);
+    console.log("Query Params:", queryParams.toString());
     const token = queryParams.get('token') || "";
+
+    if (!token) {
+        console.error("Token not found in request.");
+        ws.close();
+        return;
+    }
+
     const userId = checkUser(token);
 
     if (!userId) {
+        console.error("Invalid token or user ID.");
         ws.close();
         return;
     }
@@ -42,6 +72,8 @@ wss.on('connection', (ws: WebSocket, request) => {
     users.push(newUser);
 
     ws.on('message', async (data) => {
+        console.log("messagereceived");
+        console.log(data);
         const parsedData = JSON.parse(data.toString());
 
         const user = users.find(x => x.ws === ws);
@@ -55,13 +87,16 @@ wss.on('connection', (ws: WebSocket, request) => {
             user.rooms = user.rooms.filter(x => x !== parsedData.roomId);
         }
 
+        console.log("message received")
+        console.log(parsedData);
+
         if (parsedData.type === "chat") {
             const { roomId, message } = parsedData;
 
             try {
                 await prismaClient.chat.create({
                     data: {
-                        roomId,
+                        roomId: Number(roomId),
                         message,
                         userId: user.userId,
                     }

@@ -2,8 +2,10 @@ import { initDraw } from "@/app/draw";
 import { useEffect, useRef } from "react";
 
 export function Canvas({
-    roomId
+    roomId,
+    socket
 }:{
+    socket: WebSocket
     roomId: string;
 }){
 
