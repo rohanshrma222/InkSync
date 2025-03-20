@@ -31,7 +31,7 @@ export async function initDraw(canvas: HTMLCanvasElement,roomId:string,socket: W
 
                 if(message.type == "chat"){
                     const parsedShape = JSON.parse(message.message)
-                    existingShapes.push(parsedShape)
+                    existingShapes.push(parsedShape.shape)
                     clearCanvas(existingShapes,canvas,ctx);
                 }
             }
@@ -52,12 +52,32 @@ export async function initDraw(canvas: HTMLCanvasElement,roomId:string,socket: W
                 clicked = false
                 const width = e.clientX - startX;
                 const height = e.clientY - startY;
-                const shape: Shape = {
-                    type: "rect",
-                    x: startX,
-                    y: startY,
-                    height,
-                    width
+                //@ts-ignore
+                const selectedTool = window.selectedTool;
+                let shape : Shape | null = null;
+                if(selectedTool === "rect"){
+                         shape = {
+                        //@ts-ignore
+                        type: "rect",
+                        x: startX,
+                        y: startY,
+                        height,
+                        width
+                    }
+                    existingShapes.push(shape);
+                } else if(selectedTool === "circle"){
+                    const radius = Math.max(width,height) /2;
+                         shape = {
+                        //@ts-ignore
+                        type: "circle",
+                        radius: radius,
+                        centerX: startX + radius,
+                        centerY: startY + radius,
+                    } 
+                }
+
+                if(!shape){
+                    return;
                 }
                 existingShapes.push(shape);
                 
@@ -77,7 +97,19 @@ export async function initDraw(canvas: HTMLCanvasElement,roomId:string,socket: W
                     const height = e.clientY - startY;
                     clearCanvas(existingShapes,canvas,ctx);
                     ctx.strokeStyle="rgba(255,255,255)"
-                    ctx.strokeRect(startX,startY,width,height);
+                    // @ts-ignore
+                    const selectedTool = window.selectedTool;
+                    if(selectedTool === "rect"){
+                        ctx.strokeRect(startX,startY,width,height); 
+                    }else if(selectedTool === "circle"){
+                        const radius = Math.max(width,height) /2;
+                        const centerX = startX + radius;
+                        const centerY = startY + radius;
+                        ctx.beginPath();
+                        ctx.arc(centerX,centerY,radius,0,Math.PI * 2);
+                        ctx.stroke();
+                        ctx.closePath();     
+                    }
                 }
             })  
         }
@@ -91,6 +123,12 @@ export async function initDraw(canvas: HTMLCanvasElement,roomId:string,socket: W
                 if(shape.type === "rect"){
                     ctx.strokeStyle = "rgba(255,255,255)"
                     ctx.strokeRect(shape.x,shape.y,shape.width,shape.height);
+                }
+                else if (shape.type === "circle") {
+                    ctx.beginPath();
+                    ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.closePath();                
                 }
             })
         }
