@@ -12,8 +12,6 @@ app.use(express.json());
 app.use(cors())
 
 app.post('/signup',async(req,res)=>{
-    console.log("Received Request Body:", req.body);
-
     const parsedData = CreateUserSchema.safeParse(req.body);
     if(!parsedData.success){
         console.log(JSON.stringify(parsedData.error, null, 2));
@@ -45,7 +43,6 @@ app.post('/signup',async(req,res)=>{
 
 app.post('/signin',async(req,res)=>{
     const parsedData = SigninSchema.safeParse(req.body);
-    console.log("signin header",req.body)
     if(!parsedData.success){
         console.log(JSON.stringify(parsedData.error, null, 2));
         res.json({

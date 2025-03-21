@@ -1,4 +1,4 @@
-import { initDraw } from "@/app/draw";
+
 import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./ui/iconButton";
@@ -13,16 +13,17 @@ export function Canvas({
 }){
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [game,setGame] = useState<Game>();
     const [selectedTool,setSelectedTool] = useState<Tool>("circle")
 
     useEffect(()=>{
-        //@ts-ignore
-        window.selectedTool = selectedTool;
-    },[selectedTool]);
-    useEffect(()=>{
+      game?.setTool(selectedTool);
+    },[selectedTool,game]);
 
+    useEffect(()=>{
         if(canvasRef.current){
-            initDraw(canvasRef.current,roomId,socket);
+            const g = new Game(canvasRef.current,roomId,socket)
+            setGame(g);
         }
 
     },[canvasRef]);
