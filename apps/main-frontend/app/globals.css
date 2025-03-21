@@ -124,3 +124,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+@font-face {
+  font-family: 'Super Cottage';
+  src: url('/fonts/Super Cottage.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Puffy';
+  src: url('/fonts/Puffy.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
