@@ -5,9 +5,18 @@ import { Canvas } from "./Canvas";
 
 export function RoomCanvas({roomId}: {roomId:string}){
     const [socket,setSocket] = useState<WebSocket | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(()=>{
-        const ws = new WebSocket(`${WS_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxZTBkY2ZkMC05YTExLTRjY2YtOGQ1MC02M2Y1ODU1MWFiMjUiLCJpYXQiOjE3NDIyODg5Njl9.BnhJ_-4shfClM0s6cWm8pJreYT1kd-hoW_J33Okk18k`)
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            setError("No authentication token found. Please log in again.");
+            return;
+        }
+        
+        console.log("Using token:", token);
+        const ws = new WebSocket(`${WS_URL}?token=${token}`);
         ws.onopen = () =>{
             setSocket(ws);
             ws.send(JSON.stringify({

@@ -29,7 +29,7 @@ app.post('/signup',async(req,res)=>{
                 name:parsedData.data.name
             }
         })
-        console.log("User Successfully Stored in DB:", user);
+        console.log("User Successfully Stored in DB:", user.id);
         res.json({
             userId:user.id
         })
@@ -65,9 +65,10 @@ app.post('/signin',async(req,res)=>{
     } 
             
     const token=jwt.sign({
-        userId:user?.id
-    },JWT_SECRET)
-
+        userId:user.id
+    },JWT_SECRET,{expiresIn: '1h'})
+    console.log("User ID being stored in JWT:", user.id);
+    console.log("Generated token:", token);
     res.json({
         token
     })
@@ -90,6 +91,7 @@ app.post('/room',middleware,async(req,res)=>{
                 adminId:userId
             }
         })
+        console.log("room created by userId:",userId)
         res.json({
             roomId:room.id
         })

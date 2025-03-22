@@ -14,22 +14,21 @@ interface User {
 const users: User[] = [];
 
 function checkUser(token: string): string | null {
+  console.log("Token received for verification:", token);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    console.log("Decoded JWT:", decoded);
 
-    if (typeof decoded == "string") {
-      return null;
-    }
-
-    if (!decoded || !decoded.userId) {
+    if (typeof decoded === "string" || !decoded || !decoded.userId) {
       return null;
     }
 
     return decoded.userId;
   } catch(e) {
+    console.error("Token verification failed:", e);
     return null;
   }
-  return null;
+  
 }
 
 wss.on('connection', function connection(ws, request) {
@@ -80,23 +79,52 @@ wss.on('connection', function connection(ws, request) {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
 
-      await prismaClient.chat.create({
-        data: {
-          roomId: Number(roomId),
-          message,
-          userId
+      console.log(`Attempting to create chat with userId: ${userId}`);
+      console.log(`User ID type: ${typeof userId}, value: ${userId}`);
+    
+      try {
+        // Check if user exists first
+        const userExists = await prismaClient.user.findUnique({
+          where: { id: userId }
+        });
+    
+        if (!userExists) {
+          console.error(`User with ID ${userId} not found`);
+          ws.send(JSON.stringify({
+            type: "error",
+            message: "User not found, please log in again"
+          }));
+          return;
         }
-      });
-
-      users.forEach(user => {
-        if (user.rooms.includes(roomId)) {
-          user.ws.send(JSON.stringify({
-            type: "chat",
-            message: message,
-            roomId
-          }))
-        }
-      })
+    
+        // Create chat message
+        await prismaClient.chat.create({
+          data: {
+            roomId: Number(roomId),
+            message,
+            userId: userId  // Make sure this matches the type in your database schema
+          }
+        });
+    
+        // Send message to users in the room
+        users.forEach(user => {
+          if (user.rooms.includes(roomId)) {
+            user.ws.send(JSON.stringify({
+              type: "chat",
+              message: message,
+              userId: userId,  // Include sender ID
+              roomId
+            }))
+          }
+        });
+      } catch (error) {
+        console.error("Error creating chat message:", error);
+        // Optionally notify the user about the error
+        ws.send(JSON.stringify({
+          type: "error",
+          message: "Failed to send message"
+        }));
+      }
     }
 
   });
