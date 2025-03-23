@@ -13,13 +13,14 @@ export default function RoomPage() {
 
     const createRoom = async () => {
         const token = localStorage.getItem('token'); // Token is available as user is logged in
+        console.log(token)
 
         try {
             const response = await fetch(`${HTTP_BACKEND}/room`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': token,
+                    'Authorization': token ? `Bearer ${token}` : '',
                 },
                 body: JSON.stringify({ name: roomName }),
             });
@@ -37,7 +38,7 @@ export default function RoomPage() {
             toast.success('Room created successfully!');
             router.push(`/canvas/${data.roomId}`); // Redirect to the Canvas page
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error instanceof Error ? error.message : 'An unknown error occurred');
         }
     };
 
