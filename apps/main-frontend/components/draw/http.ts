@@ -1,4 +1,4 @@
-import { HTTP_BACKEND } from "@/config";
+import { HTTP_BACKEND } from "@/lib/config";
 import axios from "axios";
 
 export async function getExistingShapes(roomId:string){

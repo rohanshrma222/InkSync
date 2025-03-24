@@ -3,16 +3,11 @@ import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./ui/iconButton";
 import { Game } from "@/components/draw/Game";
+import { Topbar } from "./Topbar";
 
 export type Tool = "circle" | "rect" | "pencil";
 
-export function Canvas({
-    roomId,
-    socket
-}: {
-    socket: WebSocket;
-    roomId: string;
-}) {
+export function Canvas({ roomId,socket}: { roomId: string;socket: WebSocket;}) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [game, setGame] = useState<Game>();
     const [selectedTool, setSelectedTool] = useState<Tool>("circle")
@@ -22,51 +17,20 @@ export function Canvas({
     }, [selectedTool, game]);
 
     useEffect(() => {
-
         if (canvasRef.current) {
             const g = new Game(canvasRef.current, roomId, socket);
             setGame(g);
-
             return () => {
                 g.destroy();
             }
         }
-
-
     }, [canvasRef]);
 
-    return <div style={{
-        height: "100vh",
-        overflow: "hidden"
-    }}>
-        <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
+    return <div className="h-screen overflow-hidden">
+        <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}>
+            
+        </canvas>
         <Topbar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
     </div>
 }
 
-function Topbar({selectedTool, setSelectedTool}: {
-    selectedTool: Tool,
-    setSelectedTool: (s: Tool) => void
-}) {
-    return <div style={{
-            position: "fixed",
-            top: 10,
-            left: 10
-        }}>
-            <div className="flex gap-t">
-                <IconButton 
-                    onClick={() => {
-                        setSelectedTool("pencil")
-                    }}
-                    activated={selectedTool === "pencil"}
-                    icon={<Pencil />}
-                />
-                <IconButton onClick={() => {
-                    setSelectedTool("rect")
-                }} activated={selectedTool === "rect"} icon={<RectangleHorizontalIcon />} ></IconButton>
-                <IconButton onClick={() => {
-                    setSelectedTool("circle")
-                }} activated={selectedTool === "circle"} icon={<Circle />}></IconButton>
-            </div>
-        </div>
-}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { HTTP_BACKEND } from '@/config';
+import { HTTP_BACKEND } from '@/lib/config';
 import { House } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
