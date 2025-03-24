@@ -5,8 +5,10 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,11 +34,14 @@ export default function Signup() {
     const data = await response.json();
     if (response.ok) {
       toast.success("Signup successful! You can now log in.");
+      setTimeout(() => {
+        router.push("/signin"); // Redirect after login
+      }, 2000);    
     } else {
       toast.error(data.message || "Signup failed");
     }
   };
-
+ 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-r from-yellow-100 to-orange-500">
       <ToastContainer position="top-right" autoClose={3000} />

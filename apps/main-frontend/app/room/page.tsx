@@ -14,23 +14,26 @@ export default function RoomPage() {
     const createRoom = async () => {
         const token = localStorage.getItem('token'); // Token is available as user is logged in
         console.log(token)
-
+       
         try {
             const response = await fetch(`${HTTP_BACKEND}/room`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Authorization': token || '',
                 },
                 body: JSON.stringify({ name: roomName }),
             });
+           
 
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 throw new Error('Invalid server response');
             }
-
+         
             const data = await response.json();
+            console.log('Received roomId:', data); // Add this line
+
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to create room');
             }
