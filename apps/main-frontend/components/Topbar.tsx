@@ -11,7 +11,7 @@ export function Topbar({selectedTool, setSelectedTool}: {
             top: 10,
             left: 10
         }}>
-            <div className="flex gap-t">
+            <div className="flex gap-t bg-amber-50 border rounded-2xl">
                 <IconButton 
                     onClick={() => {
                         setSelectedTool("pencil")

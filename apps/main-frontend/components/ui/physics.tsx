@@ -89,7 +89,7 @@ function Scene() {
   return (
     <>
       <OrbitControls makeDefault enableZoom={false} />
-      <directionalLight castShadow position={[1, 2, 3]} intensity={1.5} />
+      <directionalLight castShadow position={[2, 4, 6]} intensity={1.5} />
       <ambientLight intensity={0.5} />
 
       <Physics gravity={[0, -9.08, 0]}>
@@ -196,7 +196,7 @@ function Scene() {
 export default function Home() {
   return (
     <div className="h-screen w-full flex justify-center items-center bg-gradient-to-r from-neutral-50 to-lime-400">
-      <Canvas shadows camera={{ position: [0, 10, 4], fov: 45 }}>
+      <Canvas shadows camera={{ position: [0, 5, 7], fov: 45 }}>
         <Scene />
       </Canvas>
     </div>

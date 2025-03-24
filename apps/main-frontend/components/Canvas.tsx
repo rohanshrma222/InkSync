@@ -26,11 +26,11 @@ export function Canvas({ roomId,socket}: { roomId: string;socket: WebSocket;}) {
         }
     }, [canvasRef]);
 
-    return <div className="h-screen overflow-hidden">
-        <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}>
-            
+    return <div className="h-screen overflow-hidden flex items-center justify-center">
+         <Topbar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
+        <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}>    
         </canvas>
-        <Topbar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
+       
     </div>
 }
 

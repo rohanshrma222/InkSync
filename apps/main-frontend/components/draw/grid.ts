@@ -2,7 +2,7 @@ export class GridManager {
     private ctx: CanvasRenderingContext2D;
     private gridSize: number;
     
-    constructor(ctx: CanvasRenderingContext2D, gridSize: number = 30) {
+    constructor(ctx: CanvasRenderingContext2D, gridSize: number = 40) {
         this.ctx = ctx;
         this.gridSize = gridSize;
     }
