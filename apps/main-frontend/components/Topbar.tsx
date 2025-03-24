@@ -1,4 +1,4 @@
-import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react"
+import { Circle, Eraser, Hand, Pencil, RectangleHorizontalIcon } from "lucide-react"
 import type { Tool } from "./Canvas"
 import { IconButton } from "./ui/iconButton"
 
@@ -25,6 +25,12 @@ export function Topbar({selectedTool, setSelectedTool}: {
                 <IconButton onClick={() => {
                     setSelectedTool("circle")
                 }} activated={selectedTool === "circle"} icon={<Circle />}></IconButton>
+                <IconButton onClick={() => {
+                    setSelectedTool("eraser")
+                }} activated={selectedTool === "eraser"} icon={<Eraser />}></IconButton>
+                 <IconButton onClick={() => {
+                    setSelectedTool("hand")
+                }} activated={selectedTool === "hand"} icon={<Hand />}></IconButton>
             </div>
         </div>
 }

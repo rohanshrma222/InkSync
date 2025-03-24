@@ -6,7 +6,7 @@ import Home from "@/components/ui/physics";
 export default function LandingPage() {
   return (
     <div>  
-          <div className="flex min-h-screen flex-col bg-white">
+          <div className="flex min-h-screen flex-col bg-gradient-to-r from-neutral-50 to-lime-400">
               {/* Navbar */}
               <header className="sticky top-0 z-10 border-b border-white/10 bg-black/20 backdrop-blur-xl p-4">
                     <div className="container mx-auto flex h-20 items-center justify-between">

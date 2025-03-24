@@ -5,7 +5,7 @@ import { IconButton } from "./ui/iconButton";
 import { Game } from "@/components/draw/Game";
 import { Topbar } from "./Topbar";
 
-export type Tool = "circle" | "rect" | "pencil";
+export type Tool = "circle" | "rect" | "pencil" |"eraser"| "hand";
 
 export function Canvas({ roomId,socket}: { roomId: string;socket: WebSocket;}) {
     const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -32,7 +32,6 @@ export function RoomCanvas({roomId}: {roomId:string}){
             Connecting to server...
         </div>
     }
-    
     return <div>
         <Canvas roomId={roomId} socket={socket}/> 
       

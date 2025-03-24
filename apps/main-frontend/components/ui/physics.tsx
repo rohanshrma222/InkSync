@@ -96,7 +96,7 @@ function Scene() {
         {/* Sphere */}
         <RigidBody
         ref={cube}
-        position={[1.5, 2, 0]}
+        position={[2, 2, 0]}
         gravityScale={1}
         restitution={0}
         friction={0.7}
@@ -195,7 +195,7 @@ function Scene() {
 
 export default function Home() {
   return (
-    <div className="h-screen w-full flex justify-center items-center bg-white">
+    <div className="h-screen w-full flex justify-center items-center bg-gradient-to-r from-neutral-50 to-lime-400">
       <Canvas shadows camera={{ position: [0, 10, 4], fov: 45 }}>
         <Scene />
       </Canvas>
