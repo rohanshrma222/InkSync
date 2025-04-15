@@ -1,0 +1,30 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Set DB URL (both build-time and runtime)
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Copy minimal files for deps
+COPY ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml ./turbo.json ./
+COPY ./packages ./packages
+COPY ./apps/main-frontend ./apps/main-frontend
+
+# Install only necessary deps
+RUN pnpm install --frozen-lockfile
+
+# Optional: Prisma/DB migration
+RUN pnpm run --filter=main-frontend... db:migrate
+
+# Build frontend
+RUN pnpm turbo run build --filter=main-frontend...
+
+# Expose frontend port
+EXPOSE 8080
+
+# Start the frontend
+CMD ["pnpm", "run", "start:frontend"]

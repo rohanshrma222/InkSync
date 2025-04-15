@@ -1,0 +1,27 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy only what's needed for install
+COPY ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml ./turbo.json ./
+COPY ./packages ./packages
+COPY ./apps/ws-backend ./apps/ws-backend
+
+# Install deps only for what's needed
+RUN pnpm install --frozen-lockfile
+
+# Migrate DB (if Prisma or similar)
+RUN pnpm run --filter=ws-backend... db:migrate
+
+# Build just backend
+RUN pnpm turbo run build --filter=ws-backend...
+
+# Copy everything else
+COPY . .
+
+EXPOSE 8080
+
+CMD ["pnpm", "run","start:websocket"]

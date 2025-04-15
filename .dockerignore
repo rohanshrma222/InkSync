@@ -1,0 +1,15 @@
+node_modules/
+**/node_modules/
+.pnpm/
+**/.pnpm/
+dist/
+build/
+*.log
+.git/
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
+.vscode/
+.idea/
+.DS_Store
