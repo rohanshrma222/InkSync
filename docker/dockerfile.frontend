@@ -1,30 +1,54 @@
+# Build stage
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Set DB URL (both build-time and runtime)
+# Set build-time arguments
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
-ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy package files first
+# Copy package files for better caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
-# Copy the entire workspace structure
+# Set up pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy only necessary workspace files
 COPY packages/ packages/
 COPY apps/main-frontend/ apps/main-frontend/
 
-# Install dependencies with verbose logging
-RUN pnpm install --frozen-lockfile --verbose
+# Install dependencies with production flag
+RUN pnpm install --frozen-lockfile --prod
 
-# Build frontend with verbose logging
-RUN cd apps/main-frontend && pnpm build
+# Run database migrations and build
+RUN pnpm run db:migrate && \
+    pnpm run build
+
+# Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Set runtime environment variables
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+ENV NODE_ENV=production
+
+# Copy only built artifacts from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/main-frontend/dist ./apps/main-frontend/dist
+COPY --from=builder /app/apps/main-frontend/package.json ./apps/main-frontend/package.json
+
+# Set user to non-root for security
+USER node
 
 # Expose frontend port
 EXPOSE 8080
 
-# Start the frontend
-CMD ["pnpm", "run", "start:frontend"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
+
+# Start the frontend with minimal footprint
+CMD ["node", "apps/main-frontend/dist/server.js"]
