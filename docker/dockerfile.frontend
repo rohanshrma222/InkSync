@@ -8,6 +8,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set DB URL (both build-time and runtime)
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy package files first
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -16,11 +17,11 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/ packages/
 COPY apps/main-frontend/ apps/main-frontend/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies with verbose logging
+RUN pnpm install --frozen-lockfile --verbose
 
-# Build frontend
-RUN pnpm build --filter=main-frontend
+# Build frontend with verbose logging
+RUN cd apps/main-frontend && pnpm build
 
 # Expose frontend port
 EXPOSE 8080
