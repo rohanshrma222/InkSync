@@ -25,6 +25,3 @@ jobs:
           push: true
           tags: rohanshrma222/inksync-backend:latest
 
-      - name: Trigger Render Deployment
-        run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
