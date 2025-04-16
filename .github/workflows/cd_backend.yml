@@ -21,7 +21,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: docker/Dockerfile.backend
+          file: ./docker/dockerfile.backend
           push: true
           tags: rohanshrma222/inksync-backend:latest
 
