@@ -23,7 +23,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.backend
           push: true
-          tags: rohanshrma222/InkSync-backend:latest
+          tags: rohanshrma222/inksync-backend:latest
 
       - name: Trigger Render Deployment
         run: |

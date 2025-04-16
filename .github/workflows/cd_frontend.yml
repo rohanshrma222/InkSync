@@ -25,7 +25,7 @@ jobs:
           build-args:
             - DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
-          tags: rohanshrma222/rohanshrma222-frontend:latest
+          tags: rohanshrma222/inksync-frontend:latest
 
       - name: Trigger Render Deployment
         run: |
