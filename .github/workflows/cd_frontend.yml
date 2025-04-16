@@ -1,7 +1,9 @@
 name: Deploy the frontend
+
 on:
   push:
     branches: [main]
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -21,6 +23,8 @@ jobs:
           context: .
           file: ./docker/dockerfile.frontend
           build-args:
-            - DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
           push: true
-          tags: rohanshrma222/inksync-frontend:latest:${{ github.sha }}
+          tags: |
+            rohanshrma222/inksync-frontend:latest
+            rohanshrma222/inksync-frontend:${{ github.sha }}
