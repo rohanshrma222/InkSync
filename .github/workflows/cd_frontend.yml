@@ -22,7 +22,6 @@ jobs:
         with:
           context: .
           file: ./docker/dockerfile.frontend
-          build-args:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          build-args: DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
           tags: rohanshrma222/inksync-frontend:${{ github.sha }}
