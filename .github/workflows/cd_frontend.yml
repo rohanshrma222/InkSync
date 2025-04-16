@@ -25,6 +25,4 @@ jobs:
           build-args:
             DATABASE_URL: ${{ secrets.DATABASE_URL }}
           push: true
-          tags: |
-            rohanshrma222/inksync-frontend:latest
-            rohanshrma222/inksync-frontend:${{ github.sha }}
+          tags: rohanshrma222/inksync-frontend:${{ github.sha }}
