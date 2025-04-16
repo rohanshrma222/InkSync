@@ -1,27 +1,32 @@
 name: Deploy the frontend
-on: 
+
+on:
   push:
     branches: [main]
+
 jobs:
-    build:
-      runs-on: ubuntu-latest 
-      steps:
-        - name: Checkout the code
-          uses: actions/checkout@v2
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
 
-        - name: Docker login
-          uses: docker/login-action@v2
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }} 
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-        - name: Build and push
-          uses: docker/build-push-action@v4
-          with:
-            context: .
-            file: ./docker/Dockerfile.frontend
-            build-args:
-             - DATABASE_URL=${{ secrets.DATABASE_URL }}
-            push: true
-            tags: rohanshrma222/rohanshrma222-frontend:${{ github.sha }}
- 
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          build-args:
+            - DATABASE_URL=${{ secrets.DATABASE_URL }}
+          push: true
+          tags: rohanshrma222/rohanshrma222-frontend:latest
+
+      - name: Trigger Render Deployment
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
