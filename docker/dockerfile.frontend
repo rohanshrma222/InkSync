@@ -17,8 +17,8 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY packages/ packages/
 COPY apps/main-frontend/ apps/main-frontend/
 
-# Install dependencies with production flag
-RUN pnpm install --frozen-lockfile --prod
+# Install dependencies
+RUN pnpm install --frozen-lockfile
 
 # Run database migrations and build
 RUN pnpm run db:migrate && \
