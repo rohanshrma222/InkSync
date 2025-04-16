@@ -23,5 +23,5 @@ jobs:
           context: .
           file: ./docker/dockerfile.websocket
           push: true
-          tags: rohanshrma222/inksync-websocket:latest
+          tags: rohanshrma222/inksync-websocket:latest:${{ github.sha }}
 

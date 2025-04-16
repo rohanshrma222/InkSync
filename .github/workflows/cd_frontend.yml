@@ -1,5 +1,4 @@
 name: Deploy the frontend
-
 on:
   push:
     branches: [main]
@@ -24,4 +23,4 @@ jobs:
           build-args:
             - DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
-          tags: rohanshrma222/inksync-frontend:latest
+          tags: rohanshrma222/inksync-frontend:latest:${{ github.sha }}

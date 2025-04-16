@@ -23,5 +23,5 @@ jobs:
           context: .
           file: ./docker/dockerfile.backend
           push: true
-          tags: rohanshrma222/inksync-backend:latest
+          tags: rohanshrma222/inksync-backend:latest:${{ github.sha }}
 
