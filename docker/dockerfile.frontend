@@ -10,19 +10,32 @@ ENV DATABASE_URL=${DATABASE_URL}
 # Copy package files for better caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
+# Create package directories to ensure everything exists
+RUN mkdir -p packages/backend-common/node_modules/.bin \
+    && mkdir -p packages/db/node_modules/.bin \
+    && mkdir -p packages/common/node_modules/.bin \
+    && mkdir -p packages/typescript-config/node_modules/.bin
+
 # Set up pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy only necessary workspace files
+# Copy all packages, including backend-common referenced in imports
 COPY packages/ packages/
 COPY apps/main-frontend/ apps/main-frontend/
+
+# Create .env file with DATABASE_URL for Prisma
+RUN echo "DATABASE_URL=\"${DATABASE_URL}\"" > packages/db/.env
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Run database migrations and build
-RUN pnpm run db:migrate && \
-    pnpm run build
+# Generate Prisma client and run migrations explicitly
+RUN cd packages/db && \
+    npx prisma generate && \
+    npx prisma migrate deploy
+
+# Build the application
+RUN pnpm run build
 
 # Production stage
 FROM node:20-alpine AS production
