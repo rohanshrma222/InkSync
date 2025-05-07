@@ -138,3 +138,11 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'BricolageGrotesque';
+  src: url('/fonts/BricolageGrotesque.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+

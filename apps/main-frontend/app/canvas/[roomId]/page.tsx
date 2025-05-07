@@ -4,6 +4,5 @@ export default function CanvasPage({params}:{
         roomId: string
     }
 }){
-    const roomId = params.roomId;
-    return <RoomCanvas roomId={roomId} />
+    return <RoomCanvas roomId={params.roomId} />
 }
