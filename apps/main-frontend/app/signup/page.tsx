@@ -43,7 +43,7 @@ export default function Signup() {
   };
  
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-yellow-100 to-orange-500">
+    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-white-100 to-purple-500">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white p-6 rounded-lg shadow-2xl w-96">
         <h2 className="text-4xl font-bold mb-4 text-center">Create an Account</h2>
@@ -87,12 +87,12 @@ export default function Signup() {
               required
             />
           </div>
-          <button type="submit" className="w-full bg-[#EB5B00] hover:bg-[#FFB200] text-white py-2 rounded-md">
+          <button type="submit" className="w-full bg-[#9950af] hover:bg-[#9950af]/80 text-white py-2 rounded-md">
             Create Account
           </button>
         </form>
         <p className="mt-4 text-center">
-          Already have an account? <Link href="/signin" className="text-[#EB5B00] hover:underline">Login</Link>
+          Already have an account? <Link href="/signin" className="text-[#9950af] hover:underline">Login</Link>
         </p>
       </div>
     </div>

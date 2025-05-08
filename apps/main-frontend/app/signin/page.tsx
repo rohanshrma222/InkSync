@@ -38,7 +38,7 @@ export default function Signin() {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-yellow-100 to-orange-500">
+    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-white-100 to-purple-500">
       <div className="bg-white p-6 rounded-lg shadow-2xl w-96">
         <h2 className="text-4xl font-bold mb-4 text-center">Login</h2>
         <form onSubmit={handleSubmit}>
@@ -55,12 +55,12 @@ export default function Signin() {
             <input type="password" name="password" className="w-full px-3 py-2 border border-black rounded-md"
               placeholder="Enter your password" onChange={handleChange} required />
           </div>
-          <button type="submit" className="w-full bg-[#EB5B00] hover:bg-[#FFB200] text-white py-2 rounded-md">
+          <button type="submit" className="w-full bg-[#9950af] hover:bg-[#9950af]/80 text-white py-2 rounded-md">
             Login
           </button>
         </form>
         <p className="mt-4 text-center">
-          Don&apos;t have an account? <Link href="/signup" className="text-[#EB5B00] hover:underline">Sign up</Link>
+          Don&apos;t have an account? <Link href="/signup" className="text-[#9950af] hover:underline">Sign up</Link>
         </p>
       </div>
       <ToastContainer position="top-right" autoClose={3000} />
