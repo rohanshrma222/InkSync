@@ -26,37 +26,79 @@ function checkUser(token: string): string | null {
     return decoded.userId;
   } catch(e) {
     console.error("Token verification failed:", e);
+    if (e instanceof jwt.TokenExpiredError) {
+      throw new Error("TOKEN_EXPIRED");
+    }
     return null;
   }
-  
 }
 
 wss.on('connection', function connection(ws, request) {
   const url = request.url;
   if (!url) {
+    ws.send(JSON.stringify({
+      type: "error",
+      code: "INVALID_REQUEST",
+      message: "Invalid connection request"
+    }));
+    ws.close();
     return;
   }
+  
   const queryParams = new URLSearchParams(url.split('?')[1]);
   const token = queryParams.get('token') || "";
-  const userId = checkUser(token);
+  let connectedUserId: string;
+  
+  try {
+    const userId = checkUser(token);
+    if (userId == null) {
+      ws.send(JSON.stringify({
+        type: "error",
+        code: "INVALID_TOKEN",
+        message: "Invalid authentication token"
+      }));
+      ws.close();
+      return;
+    }
 
-  if (userId == null) {
-    ws.close()
-    return null;
+    connectedUserId = userId;
+    users.push({
+      userId: connectedUserId,
+      rooms: [],
+      ws
+    });
+
+    // Send successful connection message
+    ws.send(JSON.stringify({
+      type: "connection",
+      status: "connected",
+      userId: connectedUserId
+    }));
+
+  } catch (e) {
+    if (e instanceof Error && e.message === "TOKEN_EXPIRED") {
+      ws.send(JSON.stringify({
+        type: "error",
+        code: "TOKEN_EXPIRED",
+        message: "Authentication token has expired"
+      }));
+    } else {
+      ws.send(JSON.stringify({
+        type: "error",
+        code: "AUTH_ERROR",
+        message: "Authentication failed"
+      }));
+    }
+    ws.close();
+    return;
   }
-
-  users.push({
-    userId,
-    rooms: [],
-    ws
-  })
 
   ws.on('message', async function message(data) {
     let parsedData;
     if (typeof data !== "string") {
       parsedData = JSON.parse(data.toString());
     } else {
-      parsedData = JSON.parse(data); // {type: "join-room", roomId: 1}
+      parsedData = JSON.parse(data);
     }
 
     if (parsedData.type === "join_room") {
@@ -79,17 +121,17 @@ wss.on('connection', function connection(ws, request) {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
 
-      console.log(`Attempting to create chat with userId: ${userId}`);
-      console.log(`User ID type: ${typeof userId}, value: ${userId}`);
+      console.log(`Attempting to create chat with userId: ${connectedUserId}`);
+      console.log(`User ID type: ${typeof connectedUserId}, value: ${connectedUserId}`);
     
       try {
         // Check if user exists first
         const userExists = await prismaClient.user.findUnique({
-          where: { id: userId }
+          where: { id: connectedUserId }
         });
     
         if (!userExists) {
-          console.error(`User with ID ${userId} not found`);
+          console.error(`User with ID ${connectedUserId} not found`);
           ws.send(JSON.stringify({
             type: "error",
             message: "User not found, please log in again"
@@ -102,7 +144,7 @@ wss.on('connection', function connection(ws, request) {
           data: {
             roomId: Number(roomId),
             message,
-            userId: userId  // Make sure this matches the type in your database schema
+            userId: connectedUserId
           }
         });
     
@@ -112,21 +154,18 @@ wss.on('connection', function connection(ws, request) {
             user.ws.send(JSON.stringify({
               type: "chat",
               message: message,
-              userId: userId,  // Include sender ID
+              userId: connectedUserId,
               roomId
             }))
           }
         });
       } catch (error) {
         console.error("Error creating chat message:", error);
-        // Optionally notify the user about the error
         ws.send(JSON.stringify({
           type: "error",
           message: "Failed to send message"
         }));
       }
     }
-
   });
-
 });

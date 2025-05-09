@@ -1,4 +1,4 @@
-import express from "express"
+import express, { Request, Response, RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import { JWT_SECRET } from "@repo/backend-common/config";
@@ -6,6 +6,7 @@ import { middleware } from "./middleware";
 import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 import cors from "cors";
+import type { ParamsDictionary } from 'express-serve-static-core';
 
 const app= express();
 app.use(express.json());
@@ -51,25 +52,29 @@ app.post('/signin',async(req,res)=>{
         return
     }
 
+    const {username , password} =parsedData.data
     const user = await prismaClient.user.findFirst({
         where:{
-            email:parsedData.data.username,
+            email:username,
         }
     }) 
 
-    if(!user  || !(await bcrypt.compare(parsedData.data.password, user.password))){
-        res.status(403).json({
-            message:"Not Authorized"
+    if(!user  || !(await bcrypt.compare(password, user.password))){
+        res.status(401).json({
+            success:false,
+            message:"Invalid email or password"
         })
         return;
     } 
             
     const token=jwt.sign({
         userId:user.id
-    },JWT_SECRET,{expiresIn: '1h'})
+    },JWT_SECRET,{expiresIn: '24h'})
     console.log("User ID being stored in JWT:", user.id);
     console.log("Generated token:", token);
-    res.json({
+    res.status(200).json({
+        success:true,
+        message:"Signin Successful",
         token
     })
 });
@@ -129,17 +134,35 @@ app.get("/chats/:roomId", async (req, res) => {
     
 })
 
-app.get("/room/:slug",async(req,res)=>{
+const getRoomHandler: RequestHandler<{slug: string}> = async (req, res) => {
     const slug = req.params.slug;
-    const room = await prismaClient.room.findFirst({
-        where:{
-            slug
+    try {
+        const room = await prismaClient.room.findFirst({
+            where: { slug }
+        });
+        
+        if (!room) {
+            res.status(404).json({
+                success: false,
+                message: "Room not found"
+            });
+            return;
         }
-    })
-    res.json({
-        room
-    })
-})
+
+        res.json({
+            success: true,
+            room
+        });
+    } catch (error) {
+        console.error("Error finding room:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to find room"
+        });
+    }
+};
+
+app.get("/room/:slug", getRoomHandler);
 
 app.listen(3001, () => {
     console.log("🚀 Server running on http://localhost:3001");
