@@ -2,29 +2,7 @@ import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./http";
 import { GridManager } from "./grid";
 import { ViewManager, Point } from "./view";
-
-type Shape = {
-    type: "rect";
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    id?: string;
-} | {
-    type: "circle";
-    centerX: number;
-    centerY: number;
-    radius: number;
-    id?: string;
-} | {
-    type: "pencil";
-    points: Point[];
-    id?: string;
-} | {
-    type: "eraser";
-} | {
-    type: "hand";
-}
+import { Shape } from "./types";
 
 export class Game {
     private canvas: HTMLCanvasElement;
@@ -37,6 +15,10 @@ export class Game {
     private selectedTool: Tool = "circle";
     private currentPencilPoints: Point[] = [];
     private eraserSize = 20; // Size of the eraser
+    private strokeColor = "#1e1e1e";
+    private fillColor = "transparent";
+    private strokeWidth = 2;
+    private strokeStyle: number[] = [];
     
     // Managers for grid and view
     private gridManager: GridManager;
@@ -83,17 +65,29 @@ export class Game {
     }
 
     async init() {
-        this.existingShapes = await getExistingShapes(this.roomId);
-        // Assign IDs to existing shapes if they don't have them
-        this.existingShapes = this.existingShapes.map((shape, index) => {
-            if (!('id' in shape)) {
-                return {
-                    ...shape,
-                    id: `shape_${index}_${Date.now()}`
-                };
-            }
-            return shape;
-        });
+        try {
+            const shapes = await getExistingShapes(this.roomId);
+            // Ensure we have a valid array of shapes
+            this.existingShapes = Array.isArray(shapes) ? shapes : [];
+            
+            // Assign IDs to existing shapes if they don't have them
+            this.existingShapes = this.existingShapes
+                .map((shape, index) => {
+                    if (!shape) return null;
+                    if (!('id' in shape)) {
+                        return {
+                            ...shape,
+                            id: `shape_${index}_${Date.now()}`
+                        };
+                    }
+                    return shape;
+                })
+                .filter((shape): shape is NonNullable<typeof shape> => shape !== null);
+            
+        } catch (error) {
+            console.error('Failed to get existing shapes:', error);
+            this.existingShapes = [];
+        }
         this.clearCanvas();
     }
 
@@ -113,6 +107,34 @@ export class Game {
                 }
                 this.clearCanvas();
             }
+        }
+    }
+
+    setStrokeColor(color: string) {
+        this.strokeColor = color;
+        this.clearCanvas();
+    }
+
+    setFillColor(color: string) {
+        this.fillColor = color;
+        this.clearCanvas();
+    }
+
+    setStrokeWidth(width: number) {
+        this.strokeWidth = width;
+        this.clearCanvas();
+    }
+
+    setStrokeStyle(style: number[]) {
+        this.strokeStyle = style;
+        this.clearCanvas();
+    }
+
+    private applyStrokeStyle(ctx: CanvasRenderingContext2D, style?: number[]) {
+        if (style && style.length > 0) {
+            ctx.setLineDash(style);
+        } else {
+            ctx.setLineDash([]);
         }
     }
 
@@ -138,17 +160,28 @@ export class Game {
         // Apply transformations for zoom and pan
         this.viewManager.applyTransform();
         
-        // Set default stroke style for shapes
-        this.ctx.strokeStyle = "rgba(255, 255, 255)";
-        this.ctx.lineWidth = 2 / scale; // Adjust line width for zoom
-        
         // Draw existing shapes
         this.existingShapes.forEach((shape) => {
+            if (shape.type === "eraser" || shape.type === "hand") return;
+            
+            // Set styles based on shape properties or defaults
+            this.ctx.strokeStyle = shape.strokeColor || "rgba(255, 255, 255)";
+            this.ctx.lineWidth = (shape.strokeWidth || 2) / scale;
+            this.applyStrokeStyle(this.ctx, shape.strokeStyle);
+            
             if (shape.type === "rect") {
+                if (shape.fillColor) {
+                    this.ctx.fillStyle = shape.fillColor;
+                    this.ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+                }
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
             } else if (shape.type === "circle") {
                 this.ctx.beginPath();
                 this.ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
+                if (shape.fillColor) {
+                    this.ctx.fillStyle = shape.fillColor;
+                    this.ctx.fill();
+                }
                 this.ctx.stroke();
                 this.ctx.closePath();                
             }
@@ -166,9 +199,12 @@ export class Game {
                 }
             }
         });
-        
+
         // Draw current pencil stroke if we're in the middle of drawing
         if (this.clicked && this.selectedTool === "pencil" && this.currentPencilPoints.length > 1) {
+            this.ctx.strokeStyle = this.strokeColor;
+            this.ctx.lineWidth = this.strokeWidth / scale;
+            this.applyStrokeStyle(this.ctx, this.strokeStyle);
             this.ctx.beginPath();
             this.ctx.moveTo(this.currentPencilPoints[0].x, this.currentPencilPoints[0].y);
             
@@ -358,7 +394,11 @@ export class Game {
                 y: this.startY,
                 height,
                 width,
-                id: `rect_${Date.now()}`
+                id: `rect_${Date.now()}`,
+                strokeColor: this.strokeColor,
+                fillColor: this.fillColor,
+                strokeWidth: this.strokeWidth,
+                strokeStyle: this.strokeStyle
             };
         } else if (selectedTool === "circle") {
             const width = currentX - this.startX;
@@ -372,7 +412,11 @@ export class Game {
                 radius,
                 centerX,
                 centerY,
-                id: `circle_${Date.now()}`
+                id: `circle_${Date.now()}`,
+                strokeColor: this.strokeColor,
+                fillColor: this.fillColor,
+                strokeWidth: this.strokeWidth,
+                strokeStyle: this.strokeStyle
             };
         } else if (selectedTool === "pencil") {
             // Only save pencil shape if we have actual points
@@ -380,7 +424,10 @@ export class Game {
                 shape = {
                     type: "pencil",
                     points: [...this.currentPencilPoints],
-                    id: `pencil_${Date.now()}`
+                    id: `pencil_${Date.now()}`,
+                    strokeColor: this.strokeColor,
+                    strokeWidth: this.strokeWidth,
+                    strokeStyle: this.strokeStyle
                 };
             }
             this.currentPencilPoints = [];
@@ -474,8 +521,14 @@ export class Game {
                 // Draw the new rectangle with transformations applied
                 this.ctx.save();
                 this.viewManager.applyTransform();
-                this.ctx.strokeStyle = "rgba(255, 255, 255)";
-                this.ctx.lineWidth = 2 / this.viewManager.getScale();
+                this.ctx.strokeStyle = this.strokeColor;
+                this.ctx.fillStyle = this.fillColor;
+                this.ctx.lineWidth = this.strokeWidth / this.viewManager.getScale();
+                this.applyStrokeStyle(this.ctx, this.strokeStyle);
+                
+                if (this.fillColor !== "transparent") {
+                    this.ctx.fillRect(this.startX, this.startY, width, height);
+                }
                 this.ctx.strokeRect(this.startX, this.startY, width, height);
                 this.ctx.restore();
                 
@@ -491,10 +544,15 @@ export class Game {
                 // Draw the new circle with transformations applied
                 this.ctx.save();
                 this.viewManager.applyTransform();
-                this.ctx.strokeStyle = "rgba(255, 255, 255)";
-                this.ctx.lineWidth = 2 / this.viewManager.getScale();
+                this.ctx.strokeStyle = this.strokeColor;
+                this.ctx.fillStyle = this.fillColor;
+                this.ctx.lineWidth = this.strokeWidth / this.viewManager.getScale();
+                this.applyStrokeStyle(this.ctx, this.strokeStyle);
                 this.ctx.beginPath();
                 this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                if (this.fillColor !== "transparent") {
+                    this.ctx.fill();
+                }
                 this.ctx.stroke();
                 this.ctx.closePath();
                 this.ctx.restore();

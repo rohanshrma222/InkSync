@@ -6,31 +6,43 @@ export function Topbar({selectedTool, setSelectedTool}: {
     selectedTool: Tool,
     setSelectedTool: (s: Tool) => void
 }) {
-    return <div style={{
-            position: "fixed",
-            top: 10,
-            left: 10
-        }}>
-            <div className="flex gap-t bg-amber-50 border rounded-2xl">
-                <IconButton 
-                    onClick={() => {
-                        setSelectedTool("pencil")
-                    }}
-                    activated={selectedTool === "pencil"}
-                    icon={<Pencil />}
-                />
-                <IconButton onClick={() => {
+    return (
+        <div className="flex gap-2 bg-amber-50 border rounded-2xl p-1">
+            <IconButton 
+                onClick={() => {
+                    setSelectedTool("pencil")
+                }}
+                activated={selectedTool === "pencil"}
+                icon={<Pencil />}
+            />
+            <IconButton 
+                onClick={() => {
                     setSelectedTool("rect")
-                }} activated={selectedTool === "rect"} icon={<RectangleHorizontalIcon />} ></IconButton>
-                <IconButton onClick={() => {
+                }} 
+                activated={selectedTool === "rect"} 
+                icon={<RectangleHorizontalIcon />} 
+            />
+            <IconButton 
+                onClick={() => {
                     setSelectedTool("circle")
-                }} activated={selectedTool === "circle"} icon={<Circle />}></IconButton>
-                <IconButton onClick={() => {
+                }} 
+                activated={selectedTool === "circle"} 
+                icon={<Circle />}
+            />
+            <IconButton 
+                onClick={() => {
                     setSelectedTool("eraser")
-                }} activated={selectedTool === "eraser"} icon={<Eraser />}></IconButton>
-                 <IconButton onClick={() => {
+                }} 
+                activated={selectedTool === "eraser"} 
+                icon={<Eraser />}
+            />
+            <IconButton 
+                onClick={() => {
                     setSelectedTool("hand")
-                }} activated={selectedTool === "hand"} icon={<Hand />}></IconButton>
-            </div>
+                }} 
+                activated={selectedTool === "hand"} 
+                icon={<Hand />}
+            />
         </div>
+    );
 }

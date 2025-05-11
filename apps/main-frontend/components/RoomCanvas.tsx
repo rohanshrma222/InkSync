@@ -26,7 +26,6 @@ export function RoomCanvas({roomId}: {roomId:string}){
         }    
     }, [])
 
-
     if(!socket){
         return <div>
             Connecting to server...
