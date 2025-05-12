@@ -148,7 +148,7 @@ export class Game {
         this.ctx.clearRect(0, 0, width, height);
         
         // Draw background
-        this.ctx.fillStyle = "rgb(0,0,0)";
+        this.ctx.fillStyle = "rgb(255,245,238)";
         this.ctx.fillRect(0, 0, width, height);
         
         // Draw grid with zoom and pan
