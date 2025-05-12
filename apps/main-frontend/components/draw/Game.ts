@@ -1,6 +1,6 @@
 import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./http";
-import { GridManager } from "./grid";
+// import { GridManager } from "./grid";
 import { ViewManager, Point } from "./view";
 import { Shape } from "./types";
 
@@ -21,7 +21,7 @@ export class Game {
     private strokeStyle: number[] = [];
     
     // Managers for grid and view
-    private gridManager: GridManager;
+    // private gridManager: GridManager;
     private viewManager: ViewManager;
 
     socket: WebSocket;
@@ -35,7 +35,7 @@ export class Game {
         this.clicked = false;
         
         // Initialize managers
-        this.gridManager = new GridManager(this.ctx);
+        // this.gridManager = new GridManager(this.ctx);
         this.viewManager = new ViewManager(canvas, this.ctx);
         
         this.init();
@@ -152,7 +152,7 @@ export class Game {
         this.ctx.fillRect(0, 0, width, height);
         
         // Draw grid with zoom and pan
-        this.gridManager.drawGrid(width, height, scale, offset.x, offset.y);
+        // this.gridManager.drawGrid(width, height, scale, offset.x, offset.y);
         
         // Save context for transformations
         this.ctx.save();

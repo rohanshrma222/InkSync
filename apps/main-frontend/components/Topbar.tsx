@@ -7,7 +7,7 @@ export function Topbar({selectedTool, setSelectedTool}: {
     setSelectedTool: (s: Tool) => void
 }) {
     return (
-        <div className="flex gap-2 bg-amber-50 border rounded-2xl p-1">
+        <div className="flex gap-2 bg-white/90 border rounded-xl p-0.5 scale-90">
             <IconButton 
                 onClick={() => {
                     setSelectedTool("pencil")
