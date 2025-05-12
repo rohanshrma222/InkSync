@@ -36,5 +36,7 @@ pnpm install
 pnpm run dev
 
 ```
+### Architecture
 
+![App Screenshot](./assets/architecture.png)
 
