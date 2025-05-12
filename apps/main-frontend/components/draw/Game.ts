@@ -26,6 +26,10 @@ export class Game {
 
     socket: WebSocket;
 
+    // Add these new properties at the start of the class
+    private undoStack: Shape[][] = [];
+    private redoStack: Shape[][] = [];
+
     constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
@@ -42,6 +46,9 @@ export class Game {
         this.initHandlers();
         this.initMouseHandlers();
         this.initWheelHandler();
+        
+        // Add keyboard event listeners
+        this.initKeyboardHandlers();
     }
     
     destroy() {
@@ -98,12 +105,16 @@ export class Game {
             if (message.type == "chat") {
                 const parsedMessage = JSON.parse(message.message);
                 if (parsedMessage.action === "add") {
+                    this.saveState();
                     const newShape = parsedMessage.shape;
                     this.existingShapes.push(newShape);
                 } else if (parsedMessage.action === "delete") {
+                    this.saveState();
                     const shapeId = parsedMessage.shapeId;
                     this.existingShapes = this.existingShapes.filter(shape => 
                         !('id' in shape) || shape.id !== shapeId);
+                } else if (parsedMessage.action === "updateAll") {
+                    this.existingShapes = parsedMessage.shapes;
                 }
                 this.clearCanvas();
             }
@@ -298,21 +309,17 @@ export class Game {
         const screenX = e.clientX - rect.left;
         const screenY = e.clientY - rect.top;
         
-        // Store screen coordinates for future use through the ViewManager
         this.viewManager.updateLastMousePosition(screenX, screenY);
+        const worldPos = this.viewManager.screenToWorld(screenX, screenY);
         
-        // Handle hand tool (pan) specifically
         if (this.selectedTool === "hand") {
+            // Just start panning
             this.viewManager.startPan(screenX, screenY);
             this.canvas.style.cursor = "grabbing";
             return;
         }
         
-        // Convert to world coordinates for other tools
-        const worldPos = this.viewManager.screenToWorld(screenX, screenY);
-        
         if (this.selectedTool === "eraser") {
-            // For eraser, we check immediately for shapes to erase
             const shapesToDelete = [];
             const scale = this.viewManager.getScale();
             
@@ -326,6 +333,9 @@ export class Game {
             
             // Delete shapes and broadcast deletion
             if (shapesToDelete.length > 0) {
+                // Save state before deletion
+                this.saveState();
+                
                 shapesToDelete.forEach(shapeId => {
                     this.existingShapes = this.existingShapes.filter(shape => 
                         !('id' in shape) || shape.id !== shapeId);
@@ -357,7 +367,8 @@ export class Game {
     }
     
     mouseUpHandler = (e: MouseEvent) => {
-        // For hand tool, release the drag state
+        if (!this.clicked) return;
+        
         if (this.selectedTool === "hand") {
             this.viewManager.endPan();
             this.canvas.style.cursor = "grab";
@@ -369,14 +380,11 @@ export class Game {
             return;
         }
         
-        if (!this.clicked) return;
-        
         this.clicked = false;
         const rect = this.canvas.getBoundingClientRect();
         const screenX = e.clientX - rect.left;
         const screenY = e.clientY - rect.top;
         
-        // Convert to world coordinates
         const worldPos = this.viewManager.screenToWorld(screenX, screenY);
         const currentX = worldPos.x;
         const currentY = worldPos.y;
@@ -418,36 +426,33 @@ export class Game {
                 strokeWidth: this.strokeWidth,
                 strokeStyle: this.strokeStyle
             };
-        } else if (selectedTool === "pencil") {
-            // Only save pencil shape if we have actual points
-            if (this.currentPencilPoints.length > 1) {
-                shape = {
-                    type: "pencil",
-                    points: [...this.currentPencilPoints],
-                    id: `pencil_${Date.now()}`,
-                    strokeColor: this.strokeColor,
-                    strokeWidth: this.strokeWidth,
-                    strokeStyle: this.strokeStyle
-                };
-            }
-            this.currentPencilPoints = [];
+        } else if (selectedTool === "pencil" && this.currentPencilPoints.length > 1) {
+            shape = {
+                type: "pencil",
+                points: [...this.currentPencilPoints],
+                id: `pencil_${Date.now()}`,
+                strokeColor: this.strokeColor,
+                strokeWidth: this.strokeWidth,
+                strokeStyle: this.strokeStyle
+            };
         }
 
-        if (!shape) {
-            return;
+        if (shape) {
+            // Save state before adding new shape
+            this.saveState();
+            
+            this.existingShapes.push(shape);
+            this.socket.send(JSON.stringify({
+                type: "chat",
+                message: JSON.stringify({
+                    action: "add",
+                    shape
+                }),
+                roomId: this.roomId
+            }));
         }
-
-        this.existingShapes.push(shape);
-
-        this.socket.send(JSON.stringify({
-            type: "chat",
-            message: JSON.stringify({
-                action: "add",
-                shape
-            }),
-            roomId: this.roomId
-        }));
         
+        this.currentPencilPoints = [];
         this.clearCanvas();
     }
     
@@ -594,5 +599,95 @@ export class Game {
                 this.canvas.style.cursor = "grab";
             }
         });
+    }
+
+    // Add this new method for keyboard event listeners
+    private initKeyboardHandlers() {
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.ctrlKey) {
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    this.undo();
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    this.redo();
+                }
+            }
+        });
+    }
+
+    // Add these new methods for undo/redo
+    private saveState() {
+        // Deep copy the shapes array
+        const shapesCopy = this.existingShapes.map(shape => {
+            if (shape.type === "pencil") {
+                return {
+                    ...shape,
+                    points: [...shape.points.map(p => ({ ...p }))]
+                };
+            }
+            return { ...shape };
+        });
+        
+        this.undoStack.push(shapesCopy);
+        this.redoStack = []; // Clear redo stack when new action is performed
+    }
+
+    private undo() {
+        if (this.undoStack.length > 0) {
+            // Save current state to redo stack
+            const currentState = this.existingShapes.map(shape => {
+                if (shape.type === "pencil") {
+                    return {
+                        ...shape,
+                        points: [...shape.points.map(p => ({ ...p }))]
+                    };
+                }
+                return { ...shape };
+            });
+            this.redoStack.push(currentState);
+            
+            // Restore previous state
+            this.existingShapes = this.undoStack.pop()!;
+            this.clearCanvas();
+            
+            // Broadcast the change
+            this.broadcastShapesUpdate();
+        }
+    }
+
+    private redo() {
+        if (this.redoStack.length > 0) {
+            // Save current state to undo stack
+            const currentState = this.existingShapes.map(shape => {
+                if (shape.type === "pencil") {
+                    return {
+                        ...shape,
+                        points: [...shape.points.map(p => ({ ...p }))]
+                    };
+                }
+                return { ...shape };
+            });
+            this.undoStack.push(currentState);
+            
+            // Restore next state
+            this.existingShapes = this.redoStack.pop()!;
+            this.clearCanvas();
+            
+            // Broadcast the change
+            this.broadcastShapesUpdate();
+        }
+    }
+
+    // Add this helper method for broadcasting updates
+    private broadcastShapesUpdate() {
+        this.socket.send(JSON.stringify({
+            type: "chat",
+            message: JSON.stringify({
+                action: "updateAll",
+                shapes: this.existingShapes
+            }),
+            roomId: this.roomId
+        }));
     }
 }
