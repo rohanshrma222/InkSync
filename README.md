@@ -24,7 +24,6 @@ Organize ideas visually with a clean and distraction-free interface
  ## Glimpse
 
 ![App Screenshot](./assets/main.png)
-```
 
 ### Develop
 
@@ -35,6 +34,7 @@ clone the Repo
 cd inksync
 pnpm install
 pnpm run dev
+
 ```
 
 
